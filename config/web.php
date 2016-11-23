@@ -11,16 +11,17 @@ $config = [
     'bootstrap' => [
         'log'
     ],
+    'aliases' => [
+        'modules' => dirname(__DIR__).'/modules'
+    ],
+    'language' => 'ru-RU',
+    'sourceLanguage' => 'ru-RU',
     'components' => [
         'request' => [
             'cookieValidationKey' => getenv('COOKIE_VALIDATION_KEY'),
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
-        ],
-        'user' => [
-            'identityClass' => 'app\models\User',
-            'enableAutoLogin' => true,
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',
@@ -45,6 +46,68 @@ $config = [
             'rules' => [
             ],
         ],
+        'view' => [
+            'theme' => [
+                'pathMap' => [
+                    '@dektrium/user/views' => '@modules/admin/views/user',
+                    '@dektrium/rbac/views' => '@modules/admin/views/rbac'
+                ],
+            ],
+        ],
+        'i18n' => [
+            'translations' => [
+                'rbac*' => [
+                    'sourceLanguage' => 'en-US',
+                    'class'    => 'yii\i18n\PhpMessageSource',
+                    'basePath' => __DIR__ . '/messages',
+                ],
+                'user*' => [
+                    'sourceLanguage' => 'en-US',
+                    'class'    => 'yii\i18n\PhpMessageSource',
+                    'basePath' => __DIR__ . '/messages',
+                ],
+            ],
+        ],
+    ],
+    'modules' => [
+        'admin' => [
+            'class' => 'modules\admin\Admin',
+        ],
+        'user' => [
+            'class' => 'dektrium\user\Module',
+            'enableUnconfirmedLogin' => true,
+            'confirmWithin' => 21600,
+            'cost' => 12,
+            'admins' => ['admin'],
+            'adminPermission' => 'admin',
+            'modelMap' => [
+                'User' => 'app\models\User',
+                'Profile' => 'app\models\Profile',
+            ],
+            'controllerMap' => [
+                'admin' => [
+                    'class'  => 'dektrium\user\controllers\AdminController',
+                    'layout' => '@modules/admin/views/layouts/main',
+                ],
+            ],
+        ],
+        'rbac' => [
+            'class' => 'dektrium\rbac\RbacWebModule',
+            'controllerMap' => [
+                'role' => [
+                    'class'  => 'dektrium\rbac\controllers\RoleController',
+                    'layout' => '@modules/admin/views/layouts/main',
+                ],
+                'permission' => [
+                    'class'  => 'dektrium\rbac\controllers\PermissionController',
+                    'layout' => '@modules/admin/views/layouts/main',
+                ],
+                'rule' => [
+                    'class'  => 'dektrium\rbac\controllers\RuleController',
+                    'layout' => '@modules/admin/views/layouts/main',
+                ],
+            ],
+        ]
     ],
     'params' => $params,
 ];

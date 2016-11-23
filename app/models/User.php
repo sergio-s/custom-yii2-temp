@@ -2,103 +2,92 @@
 
 namespace app\models;
 
-class User extends \yii\base\Object implements \yii\web\IdentityInterface
+use app\behaviors\TimestampBehavior;
+
+/**
+ * This is the model class for table "user".
+ *
+ * @property integer $id
+ * @property string $email
+ * @property string $password_hash
+ * @property string $auth_key
+ * @property integer $confirmed_at
+ * @property string $unconfirmed_email
+ * @property integer $blocked_at
+ * @property string $registration_ip
+ * @property integer $created_at
+ * @property integer $updated_at
+ * @property integer $flags
+ *
+ * @property Profile $profile
+ * @property SocialAccount[] $socialAccounts
+ * @property Token[] $tokens
+ */
+class User extends \dektrium\user\models\User
 {
-    public $id;
-    public $username;
-    public $password;
-    public $authKey;
-    public $accessToken;
-
-    private static $users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            'password' => 'admin',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            'password' => 'demo',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
-
-
     /**
      * @inheritdoc
      */
-    public static function findIdentity($id)
+    public static function tableName()
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return 'user';
     }
 
     /**
      * @inheritdoc
      */
-    public static function findIdentityByAccessToken($token, $type = null)
+    public function rules()
     {
-        foreach (self::$users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
+        return [
+            [['email'], 'required'],
+            [['confirmed_at', 'blocked_at', 'created_at', 'updated_at', 'flags'], 'integer'],
+            [['email', 'unconfirmed_email'], 'string', 'max' => 255],
+            [['password_hash'], 'string', 'max' => 60],
+            [['auth_key'], 'string', 'max' => 32],
+            [['registration_ip'], 'string', 'max' => 45],
+        ];
+    }
 
-        return null;
+    /** @inheritdoc */
+    public function behaviors()
+    {
+        return [
+            TimestampBehavior::className(),
+        ];
     }
 
     /**
-     * Finds user by username
-     *
-     * @param string $username
-     * @return static|null
+     * @return \yii\db\ActiveQuery
      */
-    public static function findByUsername($username)
+    public function getProfile()
     {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return $this->hasOne(Profile::className(), ['user_id' => 'id']);
     }
 
     /**
-     * @inheritdoc
+     * @return \yii\db\ActiveQuery
      */
-    public function getId()
+    public function getSocialAccounts()
     {
-        return $this->id;
+        return $this->hasMany(SocialAccount::className(), ['user_id' => 'id']);
     }
 
     /**
-     * @inheritdoc
+     * @return \yii\db\ActiveQuery
      */
-    public function getAuthKey()
+    public function getTokens()
     {
-        return $this->authKey;
+        return $this->hasMany(Token::className(), ['user_id' => 'id']);
     }
 
     /**
-     * @inheritdoc
+     * @return bool Whether the user is an admin or not.
      */
-    public function validateAuthKey($authKey)
+    public function getIsAdmin()
     {
-        return $this->authKey === $authKey;
-    }
-
-    /**
-     * Validates password
-     *
-     * @param string $password password to validate
-     * @return bool if password provided is valid for current user
-     */
-    public function validatePassword($password)
-    {
-        return $this->password === $password;
+        return
+            (\Yii::$app->getAuthManager() && $this->module->adminPermission ?
+                \Yii::$app->user->can($this->module->adminPermission) : false)
+            || in_array($this->email, $this->module->admins);
     }
 }

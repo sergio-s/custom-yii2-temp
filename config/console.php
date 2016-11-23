@@ -11,6 +11,9 @@ $config = [
     'bootstrap' => [
         'log'
     ],
+    'aliases' => [
+        'db' => dirname(__DIR__).'/db'
+    ],
     'controllerNamespace' => 'app\commands',
     'components' => [
         'cache' => [
@@ -30,9 +33,20 @@ $config = [
     'controllerMap' => [
         'migrate' => [
             'class' => 'yii\console\controllers\MigrateController',
-            'migrationPath' => dirname(__DIR__).'/db/migrations',
+            'migrationNamespaces' => [
+               'db\migrations',
+            ],
+            'migrationPath' => null,
         ],
     ],
+    'modules' => [
+        'user' => [
+            'class' => 'dektrium\user\Module',
+        ],
+        'rbac' => [
+            'class' => 'dektrium\rbac\RbacConsoleModule'
+        ],
+    ]
 ];
 
 if (YII_DEBUG) {

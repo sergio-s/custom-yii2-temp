@@ -7,6 +7,7 @@
 
 namespace app\commands;
 
+use app\models\User;
 use yii\console\Controller;
 
 /**
@@ -25,6 +26,11 @@ class HelloController extends Controller
      */
     public function actionIndex($message = 'hello world')
     {
-        echo $message . "\n";
+        $user = new User();
+        $user->email = 'admin@admin.ru';
+        $user->password = 'admin';
+        if ($user->create()) {
+
+        }
     }
 }
