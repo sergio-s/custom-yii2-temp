@@ -1,2 +1,2 @@
-Портал оборудования
-============================
+# custom-yii2-temp
+This is the custom template application wich yii2 framework for example...
